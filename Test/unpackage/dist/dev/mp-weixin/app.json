@@ -1,0 +1,56 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/menu/menu",
+    "pages/cart/cart",
+    "pages/user/user",
+    "pages/checkout/checkout",
+    "pages/settings/index",
+    "pages/order/list",
+    "pages/menu/detail"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "智慧食堂",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#3cc51f",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-selected.png",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/menu/menu",
+        "iconPath": "static/tabbar/dish.png",
+        "selectedIconPath": "static/tabbar/dish-selected.png",
+        "text": "菜品"
+      },
+      {
+        "pagePath": "pages/cart/cart",
+        "iconPath": "static/tabbar/cart.png",
+        "selectedIconPath": "static/tabbar/cart-selected.png",
+        "text": "购物车"
+      },
+      {
+        "pagePath": "pages/user/user",
+        "iconPath": "static/tabbar/user.png",
+        "selectedIconPath": "static/tabbar/user-selected.png",
+        "text": "我的"
+      }
+    ]
+  },
+  "permission": {
+    "scope.userInfo": {
+      "desc": "用于完善用户资料"
+    }
+  },
+  "usingComponents": {}
+}

@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "uview-ui": "^2.0.38"
+  },
+  "scripts": {
+    "dev:mp-weixin": "npx uni -p mp-weixin"
+  },
+  "devDependencies": {
+    "@dcloudio/vue-cli-plugin-uni": "^2.0.2-4050520250307001",
+    "sass": "^1.49.7",
+    "sass-loader": "^10.0.1"
+  }
+}

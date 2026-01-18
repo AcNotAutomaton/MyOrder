@@ -53,25 +53,48 @@ const _sfc_main = {
     const logoutPopupRef = common_vendor.ref(null);
     const onGetUserInfo = async (e) => {
       try {
-        if (e.detail.errMsg !== "getUserInfo:ok") {
-          throw new Error("用户拒绝授权");
-        }
+        common_vendor.index.__f__("log", "at pages/user/user.vue:149", "onGetUserInfo 参数:", e);
         const loginRes = await new Promise((resolve, reject) => {
           common_vendor.index.login({
             provider: "weixin",
-            success: (res2) => resolve(res2),
-            fail: (err) => reject(err)
+            success: (res2) => {
+              common_vendor.index.__f__("log", "at pages/user/user.vue:156", "微信登录成功:", res2);
+              resolve(res2);
+            },
+            fail: (err) => {
+              common_vendor.index.__f__("error", "at pages/user/user.vue:160", "微信登录失败:", err);
+              reject(err);
+            }
           });
         });
+        let wxUserInfo;
+        if (e.detail && e.detail.userInfo) {
+          wxUserInfo = e.detail.userInfo;
+          common_vendor.index.__f__("log", "at pages/user/user.vue:170", "使用 e.detail.userInfo:", wxUserInfo);
+        } else if (e.detail) {
+          wxUserInfo = e.detail;
+          common_vendor.index.__f__("log", "at pages/user/user.vue:173", "使用 e.detail:", wxUserInfo);
+        } else if (e.userInfo) {
+          wxUserInfo = e.userInfo;
+          common_vendor.index.__f__("log", "at pages/user/user.vue:176", "使用 e.userInfo:", wxUserInfo);
+        } else if (e) {
+          wxUserInfo = e;
+          common_vendor.index.__f__("log", "at pages/user/user.vue:179", "使用 e:", wxUserInfo);
+        }
+        if (!wxUserInfo || !wxUserInfo.nickName) {
+          throw new Error("获取用户信息失败：用户信息为空");
+        }
+        common_vendor.index.__f__("log", "at pages/user/user.vue:186", "最终用户信息:", wxUserInfo);
         const res = await api_index.userApi.wxLogin({
           code: loginRes.code,
-          userInfo: e.detail.userInfo
+          userInfo: wxUserInfo
         });
+        common_vendor.index.__f__("log", "at pages/user/user.vue:194", "登录响应:", res);
         Object.assign(userInfo, {
           ...res.user,
-          nickName: e.detail.userInfo.nickName,
-          avatarUrl: e.detail.userInfo.avatarUrl,
-          gender: e.detail.userInfo.gender
+          nickName: wxUserInfo.nickName,
+          avatarUrl: wxUserInfo.avatarUrl,
+          gender: wxUserInfo.gender
         });
         store_index.store.login(userInfo, res.token);
         isLoggedIn.value = true;
@@ -79,10 +102,12 @@ const _sfc_main = {
           title: "登录成功",
           icon: "success"
         });
-        common_vendor.index.__f__("log", "at pages/user/user.vue:183", res);
-        common_vendor.index.__f__("log", "at pages/user/user.vue:184", userInfo);
+        common_vendor.index.__f__("log", "at pages/user/user.vue:211", res);
+        common_vendor.index.__f__("log", "at pages/user/user.vue:212", userInfo);
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/user/user.vue:186", "登录失败:", error);
+        common_vendor.index.__f__("error", "at pages/user/user.vue:214", "登录失败:", error);
+        common_vendor.index.__f__("error", "at pages/user/user.vue:215", "错误详情:", error.message);
+        common_vendor.index.__f__("error", "at pages/user/user.vue:216", "错误堆栈:", error.stack);
         if (error.message === "用户拒绝授权") {
           common_vendor.index.showModal({
             title: "提示",
@@ -90,9 +115,16 @@ const _sfc_main = {
             showCancel: false
           });
         } else {
-          common_vendor.index.showToast({
-            title: error.message || "登录失败",
-            icon: "none"
+          common_vendor.index.showModal({
+            title: "登录失败",
+            content: error.message || "登录失败，请检查网络连接或稍后重试",
+            showCancel: true,
+            confirmText: "重试",
+            success: (res) => {
+              if (res.confirm) {
+                handleLogin();
+              }
+            }
           });
         }
       }
@@ -153,6 +185,37 @@ const _sfc_main = {
         url: item.path
       });
     };
+    const handleLogin = () => {
+      common_vendor.index.__f__("log", "at pages/user/user.vue:312", "点击登录按钮");
+      common_vendor.index.getUserProfile({
+        desc: "用于完善会员资料",
+        success: (res) => {
+          common_vendor.index.__f__("log", "at pages/user/user.vue:317", "getUserProfile success:", res);
+          onGetUserInfo(res);
+        },
+        fail: (err) => {
+          common_vendor.index.__f__("error", "at pages/user/user.vue:321", "getUserProfile fail:", err);
+          if (err.errMsg.includes("getUserProfile:fail auth deny")) {
+            common_vendor.index.showModal({
+              title: "提示",
+              content: "需要您的授权才能使用登录功能",
+              showCancel: true,
+              confirmText: "去授权",
+              success: (res) => {
+                if (res.confirm) {
+                  handleLogin();
+                }
+              }
+            });
+          } else {
+            common_vendor.index.showToast({
+              title: "授权失败",
+              icon: "none"
+            });
+          }
+        }
+      });
+    };
     return {
       isLoggedIn,
       userInfo,
@@ -162,6 +225,7 @@ const _sfc_main = {
       goToSettings,
       goToOrders,
       handleMenuClick,
+      handleLogin,
       onGetUserInfo,
       logoutPopupRef,
       confirmLogout,
@@ -202,7 +266,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "50",
       color: "#999"
     }),
-    c: common_vendor.o((...args) => _ctx.handleLogin && _ctx.handleLogin(...args)),
+    c: common_vendor.o((...args) => $setup.handleLogin && $setup.handleLogin(...args)),
     d: common_vendor.o((...args) => $setup.onGetUserInfo && $setup.onGetUserInfo(...args))
   } : {
     e: $setup.userInfo.avatarUrl,

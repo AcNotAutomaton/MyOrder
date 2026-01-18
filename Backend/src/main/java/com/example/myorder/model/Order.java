@@ -38,6 +38,9 @@ public class Order {
     @Column
     private LocalDateTime updateTime;
 
+    @Column
+    private LocalDateTime cancelTime;
+
     // 订单状态常量
     public static final String STATUS_PENDING = "PENDING"; // 待支付
     public static final String STATUS_PAID = "PAID"; // 已支付

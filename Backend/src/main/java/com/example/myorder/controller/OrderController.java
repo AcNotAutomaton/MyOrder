@@ -105,4 +105,42 @@ public class OrderController {
             return WxPayNotifyResponse.fail("处理失败");
         }
     }
+
+    @Operation(
+        summary = "取消订单",
+        description = "取消指定的订单（仅限未支付状态）"
+    )
+    @ApiResponse(
+        responseCode = "200",
+        description = "订单取消成功"
+    )
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<String> cancelOrder(
+        @Parameter(description = "订单ID")
+        @PathVariable Long orderId
+    ) {
+        try {
+            orderService.cancelOrder(orderId);
+            return ResponseEntity.ok("订单取消成功");
+        } catch (Exception e) {
+            log.error("取消订单失败", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("取消订单失败: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<String> deleteOrder(
+        @Parameter(description = "订单ID")
+        @PathVariable Long orderId
+    ) {
+        try {
+            orderService.deleteOrder(orderId);
+            return ResponseEntity.ok("订单删除成功");
+        } catch (Exception e) {
+            log.error("删除订单失败", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("删除订单失败: " + e.getMessage());
+        }
+    }
 } 

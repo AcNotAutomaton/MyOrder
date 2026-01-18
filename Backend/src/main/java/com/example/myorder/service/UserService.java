@@ -38,15 +38,15 @@ public class UserService {
     public LoginResult wxLoginVerify(String code, String nickName, String avatarUrl, Integer gender) {
         try {
             // 构建请求URL
-            String url = String.format(wxConfig.getLoginUrl(), 
-                wxConfig.getAppId(), 
-                wxConfig.getAppSecret(), 
+            String url = String.format(wxConfig.getLoginUrl(),
+                wxConfig.getAppId(),
+                wxConfig.getAppSecret(),
                 code);
-            
+
             // 发送请求并处理响应
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             String responseBody = response.getBody();
-            
+
             // 使用ObjectMapper手动解析JSON
             ObjectMapper mapper = new ObjectMapper();
             WxLoginResponse wxLoginResponse = mapper.readValue(responseBody, WxLoginResponse.class);

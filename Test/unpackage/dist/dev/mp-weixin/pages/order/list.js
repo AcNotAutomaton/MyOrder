@@ -159,7 +159,7 @@ const _sfc_main = {
     const buyAgain = async (order) => {
       try {
         for (const item of order.orderItems) {
-          await cartApi.saveCartItem({
+          await api_index.cartApi.saveCartItem({
             userId: store_index.store.getUserId(),
             menuItemId: item.id,
             quantity: item.quantity

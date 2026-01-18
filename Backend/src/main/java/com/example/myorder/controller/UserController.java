@@ -7,8 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/user")
 @CrossOrigin
 public class UserController {
     @Autowired
@@ -16,11 +18,12 @@ public class UserController {
 
     // 微信登录验证
     @PostMapping("/wx-login")
-    public ResponseEntity<LoginResult> wxLoginVerify(
-            @RequestParam String code,
-            @RequestParam(required = false) String nickName,
-            @RequestParam(required = false) String avatarUrl,
-            @RequestParam(required = false) Integer gender) {
+    public ResponseEntity<LoginResult> wxLoginVerify(@RequestBody Map<String, Object> request) {
+        String code = (String) request.get("code");
+        String nickName = (String) request.get("nickName");
+        String avatarUrl = (String) request.get("avatarUrl");
+        Integer gender = request.get("gender") != null ? ((Number) request.get("gender")).intValue() : null;
+
         return ResponseEntity.ok(userService.wxLoginVerify(code, nickName, avatarUrl, gender));
     }
 

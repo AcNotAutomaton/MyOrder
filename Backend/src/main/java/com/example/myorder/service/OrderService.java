@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -84,7 +85,42 @@ public class OrderService {
 
         return orderRepository.save(order);
     }
-    
+
+    @Transactional
+    public void cancelOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("订单不存在"));
+
+        if (!Order.STATUS_PENDING.equals(order.getStatus())) {
+            throw new RuntimeException("只能取消未支付的订单");
+        }
+
+        order.setStatus(Order.STATUS_CANCELLED);
+        order.setCancelTime(LocalDateTime.now());
+
+        // 恢复库存（如果需要的话）
+        order.getOrderItems().forEach(orderItem -> {
+            MenuItem menuItem = orderItem.getMenuItem();
+            menuItem.setSalesCount(menuItem.getSalesCount() - orderItem.getQuantity());
+            menuItemRepository.save(menuItem);
+        });
+
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    public void deleteOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("订单不存在"));
+
+        // 只有已完成的订单才能删除
+        if (!Order.STATUS_COMPLETED.equals(order.getStatus()) && !Order.STATUS_CANCELLED.equals(order.getStatus())) {
+            throw new RuntimeException("只能删除已完成或已取消的订单");
+        }
+
+        orderRepository.delete(order);
+    }
+
     public Page<OrderDTO> getUserOrders(Long userId, int page, int size, String status) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by("createTime").descending());
         

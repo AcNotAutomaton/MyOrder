@@ -146,31 +146,59 @@ export default {
     // 获取用户信息回调
     const onGetUserInfo = async (e) => {
       try {
-        if (e.detail.errMsg !== 'getUserInfo:ok') {
-          throw new Error('用户拒绝授权')
-        }
+        console.log('onGetUserInfo 参数:', e)
 
-        // 获取登录code
+        // 获取微信登录code
         const loginRes = await new Promise((resolve, reject) => {
           uni.login({
             provider: 'weixin',
-            success: res => resolve(res),
-            fail: err => reject(err)
+            success: res => {
+              console.log('微信登录成功:', res)
+              resolve(res)
+            },
+            fail: err => {
+              console.error('微信登录失败:', err)
+              reject(err)
+            }
           })
         })
+
+        // 处理用户信息 - 使用不同的方式获取用户信息
+        let wxUserInfo
+        if (e.detail && e.detail.userInfo) {
+          wxUserInfo = e.detail.userInfo
+          console.log('使用 e.detail.userInfo:', wxUserInfo)
+        } else if (e.detail) {
+          wxUserInfo = e.detail
+          console.log('使用 e.detail:', wxUserInfo)
+        } else if (e.userInfo) {
+          wxUserInfo = e.userInfo
+          console.log('使用 e.userInfo:', wxUserInfo)
+        } else if (e) {
+          wxUserInfo = e
+          console.log('使用 e:', wxUserInfo)
+        }
+
+        if (!wxUserInfo || !wxUserInfo.nickName) {
+          throw new Error('获取用户信息失败：用户信息为空')
+        }
+
+        console.log('最终用户信息:', wxUserInfo)
 
         // 调用后端登录接口
         const res = await userApi.wxLogin({
           code: loginRes.code,
-          userInfo: e.detail.userInfo
+          userInfo: wxUserInfo
         })
+
+        console.log('登录响应:', res)
 
         // 更新状态
         Object.assign(userInfo, {
           ...res.user,
-          nickName: e.detail.userInfo.nickName,
-          avatarUrl: e.detail.userInfo.avatarUrl,
-          gender: e.detail.userInfo.gender
+          nickName: wxUserInfo.nickName,
+          avatarUrl: wxUserInfo.avatarUrl,
+          gender: wxUserInfo.gender
         })
         
         store.login(userInfo, res.token)
@@ -184,6 +212,9 @@ export default {
         console.log(userInfo)
       } catch (error) {
         console.error('登录失败:', error)
+        console.error('错误详情:', error.message)
+        console.error('错误堆栈:', error.stack)
+
         if (error.message === '用户拒绝授权') {
           uni.showModal({
             title: '提示',
@@ -191,9 +222,16 @@ export default {
             showCancel: false
           })
         } else {
-          uni.showToast({
-            title: error.message || '登录失败',
-            icon: 'none'
+          uni.showModal({
+            title: '登录失败',
+            content: error.message || '登录失败，请检查网络连接或稍后重试',
+            showCancel: true,
+            confirmText: '重试',
+            success: (res) => {
+              if (res.confirm) {
+                handleLogin()
+              }
+            }
           })
         }
       }
@@ -263,9 +301,43 @@ export default {
         })
         return
       }
-      
+
       uni.navigateTo({
         url: item.path
+      })
+    }
+
+    // 处理登录点击
+    const handleLogin = () => {
+      console.log('点击登录按钮')
+      // 触发微信登录授权
+      uni.getUserProfile({
+        desc: '用于完善会员资料',
+        success: (res) => {
+          console.log('getUserProfile success:', res)
+          onGetUserInfo(res)
+        },
+        fail: (err) => {
+          console.error('getUserProfile fail:', err)
+          if (err.errMsg.includes('getUserProfile:fail auth deny')) {
+            uni.showModal({
+              title: '提示',
+              content: '需要您的授权才能使用登录功能',
+              showCancel: true,
+              confirmText: '去授权',
+              success: (res) => {
+                if (res.confirm) {
+                  handleLogin()
+                }
+              }
+            })
+          } else {
+            uni.showToast({
+              title: '授权失败',
+              icon: 'none'
+            })
+          }
+        }
       })
     }
 
@@ -278,6 +350,7 @@ export default {
       goToSettings,
       goToOrders,
       handleMenuClick,
+      handleLogin,
       onGetUserInfo,
       logoutPopupRef,
       confirmLogout,

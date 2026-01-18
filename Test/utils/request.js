@@ -1,15 +1,17 @@
 import { getToken } from '@/utils/auth'
 
 // 配置基础URL - 根据实际环境配置
-const BASE_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://localhost:8081/api'  // 开发环境（请替换为你的电脑IP）
-  : 'https://your-production-domain.com/api'  // 生产环境
+const BASE_URL = 'http://localhost:8081/api'  // 开发环境（请替换为你的电脑IP）
 const TIMEOUT = 15000 // 15秒超时
 
 // 创建请求实例
 const request = (options) => {
   // 拼接完整请求路径
-  let url = BASE_URL + options.url
+  let url = options.url
+  // 如果options.url不是以http开头，则添加BASE_URL
+  if (!url.startsWith('http')) {
+    url = BASE_URL + url
+  }
   
   // 处理query参数
   if (options.params) {
@@ -52,7 +54,10 @@ const request = (options) => {
       },
       fail: (err) => {
         console.error('请求失败:', err)
-        reject(new Error('网络请求失败'))
+        console.error('请求URL:', url)
+        console.error('请求方法:', options.method)
+        console.error('请求参数:', options.data)
+        reject(new Error(`网络请求失败: ${err.errMsg || err.message || '未知错误'}`))
       }
     })
   })

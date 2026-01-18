@@ -95,7 +95,7 @@
 
 <script>
 import { ref, reactive, onMounted } from "vue";
-import { orderApi } from "@/api";
+import { orderApi, cartApi } from "@/api";
 import store from "@/store";
 
 export default {
